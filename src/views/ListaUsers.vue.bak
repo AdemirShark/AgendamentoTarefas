@@ -1,0 +1,59 @@
+<template>
+    <BContainer class="bv-example-row">
+        <b-table :items="usuarios" :fields="fields" striped hover>
+            <!-- Coluna personalizada: Quantidade de Tarefas -->
+            <template #cell(qtdTarefas)="data">
+                {{ data.item.tarefas.length }}
+            </template>
+
+            <!-- Coluna personalizada: Ações (Editar | Excluir) -->
+            <template #cell(acoes)="data">
+                <b-button size="sm" variant="primary" @click="editarUsuario(data.item)">Editar</b-button>
+                <b-button size="sm" variant="danger" class="ms-2" @click="excluirUsuario(data.item.id)">Excluir</b-button>
+            </template>
+        </b-table>
+    </BContainer>
+</template>
+
+<script>
+    import axios from 'axios';
+
+    export default {
+        data() {
+            return {
+                usuarios: [],
+                fields: [
+                    { key: 'nome', label: 'Nome' },
+                    { key: 'email', label: 'Email' },
+                    { key: 'qtdTarefas', label: 'Qtd. Tarefas' },
+                    { key: 'acoes', label: 'Ações' }
+                ]
+            };
+        },
+        mounted() {
+            this.getUsers();
+        },
+        methods: {
+            async getUsers() {
+                const response = await axios.get('http://localhost:8080/usuarios');
+                this.usuarios = response.data;
+            },
+            editarUsuario(usuario) {
+                alert(`Editar usuário: ${usuario.nome}`);
+                // Aqui você coloca a navegação ou modal para editar
+            },
+            excluirUsuario(id) {
+                if (confirm('Tem certeza que deseja excluir?')) {
+                    alert(`Excluir usuário com id: ${id}`);
+                    // Aqui você faz a requisição para excluir no backend
+                }
+            }
+        }
+    };
+</script>
+
+<style scoped>
+    .ms-2 {
+        margin-left: 0.5rem;
+    }
+</style>

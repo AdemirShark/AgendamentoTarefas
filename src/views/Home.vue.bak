@@ -1,0 +1,318 @@
+<template>
+    <div>
+        <BContainer class="bv-example-row">
+            <BRow>
+                <BCol><button @click="abrirModal" class="btn">Criar Nova Tarefa</button> </BCol>
+                <BCol><button @click="abrirModal" class="btn">Criar Nova Tarefa</button> </BCol>
+            </BRow>
+            <BRow>
+                <BCol>
+                    <label>Selcione o Usuario:</label> <br>
+                    <select v-model="usuarioSelecionado" @change="buscarTarefas" class="select-box">
+                        <option value="">Selecione um usuário</option>
+                        <option v-for="usuario in usuarios" :key="usuario.id" :value="usuario.id">
+                            {{ usuario.nome }}
+                        </option>
+                    </select>
+                </BCol>
+
+            </BRow>
+            <div v-if="tarefas.length" class="kanban">
+                <div v-for="tarefa in tarefas"
+                     :key="tarefa.id"
+                     :class="['card', tarefa.prioridade.toLowerCase()]">
+                    <h3>{{ tarefa.titulo }}</h3>
+                    <p>{{ tarefa.descricao }}</p>
+                    <small>{{ formatarData(tarefa.dataHora) }}</small>
+                    <span class="tag">{{ tarefa.prioridade }}</span>
+                </div>
+            </div>
+            <!-- Modal de criação de tarefa -->
+            <div v-if="modalAberto" class="modal-overlay" @click="fecharModal">
+                <div class="modal-content" @click.stop>
+                    <div class="nova-tarefa">
+                        <h1>Criar Nova Tarefa</h1>
+                        <form @submit.prevent="salvarTarefa" class="task-form">
+                            <div class="form-group">
+                                <label for="titulo">Título:</label>
+                                <input v-model="novaTarefa.titulo" id="titulo" placeholder="Título da tarefa" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="descricao">Descrição:</label>
+                                <textarea v-model="novaTarefa.descricao" id="descricao" placeholder="Descrição da tarefa"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dataConclusao">Data de Conclusão:</label>
+                                <input type="date" v-model="novaTarefa.dataConclusao" id="dataConclusao" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prioridade">Prioridade:</label>
+                                <select v-model="novaTarefa.prioridade" id="prioridade">
+                                    <option>Baixa</option>
+                                    <option>Média</option>
+                                    <option>Alta</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn">Salvar</button>
+                            <button type="button" @click="fecharModal" class="btn cancel-btn">Cancelar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </BContainer>
+
+
+
+
+    </div>
+</template>
+
+<script>
+    import { ref, onMounted } from 'vue';
+    import axios from 'axios';
+    export default {
+        data() {
+            return {
+                usuarios: [],
+                usuarioSelecionado: null,
+                tarefas: [],
+                novaTarefa: {
+                    titulo: '',
+                    descricao: '',
+                    dataConclusao: '',
+                    prioridade: 'Média',
+                },
+                teste: [
+                    {
+                        "id": 1,
+                        "titulo": "Estudar Java",
+                        "descricao": "Ler sobre Spring Boot",
+                        "dataHora": "2025-05-10T18:00:00",
+                        "prioridade": "ALTA"
+                    },
+                    {
+                        "id": 2,
+                        "titulo": "Revisar Vue 3",
+                        "descricao": "Componentes e Props",
+                        "dataHora": "2025-05-12T10:30:00",
+                        "prioridade": "MEDIA"
+                    },
+                    {
+                        "id": 3,
+                        "titulo": "Organizar tarefas",
+                        "descricao": "Limpar backlog e ajustar prazos",
+                        "dataHora": "2025-05-13T14:00:00",
+                        "prioridade": "BAIXA"
+                    }
+                ],
+                modalAberto: false,
+            };
+        },
+        mounted() {
+            this.getUsers();
+        },
+        methods: {
+            abrirModal() {
+                this.modalAberto = true;
+            },
+            fecharModal() {
+                this.modalAberto = false;
+            },
+            async salvarTarefa() {
+                const novaTarefa = { ...this.tarefa, usuario_id: 1 }; // Exemplo de dados adicionais
+                try {
+                    const response = await api.criarTarefa(novaTarefa);
+                    console.log('Tarefa criada:', response.data);
+                    this.fecharModal(); // Fecha o modal após salvar a tarefa
+                } catch (error) {
+                    console.error('Erro ao salvar tarefa:', error);
+                }
+            },
+            buscarTarefas() {
+                if (this.usuarioSelecionado) {
+                    this.tarefas = this.teste;
+                    //const response = await axios.get(`http://localhost:8080/usuarios/${usuarioSelecionado.value}/tarefas`);
+                    // tarefas.value = response.data;
+                    // tarefas.value = teste;
+                } else {
+                    this.tarefas = [];
+                }
+            },
+            async getUsers() {
+                const response = await axios.get('http://localhost:8080/usuarios');
+                this.usuarios = response.data;
+            },
+            formatarData(dataHora) {
+                console.log(dataHora)
+                const data = new Date(dataHora);
+                return data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            },
+            async salvarTarefa() {
+                const novaTarefa = { ...this.tarefa, usuario_id: 1 }; // Exemplo de dados adicionais
+                try {
+                    const response = await api.criarTarefa(novaTarefa);
+                    console.log('Tarefa criada:', response.data);
+                    this.fecharModal(); // Fecha o modal após salvar a tarefa
+                } catch (error) {
+                    console.error('Erro ao salvar tarefa:', error);
+                }
+            }
+        }
+    }
+
+
+
+    //onMounted(async () => {
+    //    const response = await axios.get('http://localhost:8080/usuarios');
+    //    usuarios.value = response.data;
+    //});
+
+    //const buscarTarefas = async () => {
+
+    //};
+
+
+</script>
+
+<style scoped>
+    .select-box {
+        margin: 1rem 0;
+        padding: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .kanban {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .card {
+        border-radius: 10px;
+        padding: 1rem;
+        color: #fff;
+        position: relative;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+    /* Prioridades coloridas */
+    .alta {
+        background: linear-gradient(135deg, #ff4e50, #f9d423);
+    }
+
+    .media {
+        background: linear-gradient(135deg, #f7971e, #ffd200);
+    }
+
+    .baixa {
+        background: linear-gradient(135deg, #43cea2, #185a9d);
+    }
+
+    .tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255,255,255,0.2);
+        padding: 0.2rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .nova-tarefa {
+        padding: 20px;
+        background-color: #f4f7f6;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .task-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    input,
+    textarea,
+    select {
+        padding: 10px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+    .cancel-btn {
+        background-color: #d9534f;
+    }
+
+        .cancel-btn:hover {
+            background-color: #c9302c;
+        }
+
+    /* Estilos do Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+    }
+</style>
